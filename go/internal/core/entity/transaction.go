@@ -1,5 +1,5 @@
 package entity
 
 type Transaction struct {
-	ID string
+	ID int64
 }

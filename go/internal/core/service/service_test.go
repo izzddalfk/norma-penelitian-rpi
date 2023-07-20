@@ -201,7 +201,7 @@ func TestPay(mainT *testing.T) {
 
 			trx, err := svc.Pay(ctx, testCase.Input)
 			require.NoError(t, err)
-			require.Equal(t, trx.ID != "", testCase.ExpectedSuccess)
+			require.Equal(t, trx.ID != 0, testCase.ExpectedSuccess)
 		})
 	}
 }
@@ -293,7 +293,7 @@ func (m *mockStorage) CreateTransaction(ctx context.Context, shoppingCart *entit
 		return nil, fmt.Errorf("no shopping cart")
 	}
 	return &entity.Transaction{
-		ID: faker.New().UUID().V4(),
+		ID: time.Now().Unix(),
 	}, nil
 }
 
