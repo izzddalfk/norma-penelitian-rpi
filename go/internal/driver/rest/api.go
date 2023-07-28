@@ -30,13 +30,15 @@ func NewAPI(config APIConfig) (*api, error) {
 
 func (a *api) Handler() *gin.Engine {
 	r := gin.Default()
-	// small umkm api
+	// small umkm API
 	smallRouter := r.Group("/api/small")
 	{
 		smallRouter.GET("/stocks", a.HandleShowListOfGoods)
 		smallRouter.POST("/cart", a.HandleAddGoodsToCart)
 		smallRouter.POST("/pay", a.HandlePay)
 	}
+	// for testing API
+	r.POST("/clear-db", a.HandleClearDB)
 
 	return r
 }
@@ -157,4 +159,16 @@ func (a *api) HandlePay(c *gin.Context) {
 	respBody.TransactionID = trx.ID
 
 	c.JSON(http.StatusOK, NewSuccessResponse(respBody))
+}
+
+func (a *api) HandleClearDB(c *gin.Context) {
+	if err := a.servce.ClearDatabase(c.Request.Context()); err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			NewInternalServerErrorResponse(err.Error()),
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, NewSuccessResponse("Clear database success!"))
 }

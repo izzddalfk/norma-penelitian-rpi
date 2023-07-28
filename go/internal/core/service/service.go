@@ -17,6 +17,8 @@ type Service interface {
 	ReqCalculateDeliveryPrice(ctx context.Context, input ReqCalculateDeliveryPriceInput) error
 	ReqPickupDelivery(ctx context.Context, transactionID int) error
 	UpdateStock(ctx context.Context, input UpdateStockInput) error
+	// for testing
+	ClearDatabase(ctx context.Context) error
 }
 
 type Storage interface {
@@ -24,6 +26,7 @@ type Storage interface {
 	GetExistingShoppingCart(ctx context.Context, shoppingCartID int64) (*entity.ShoppingCart, error)
 	AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.ShoppingCart, error)
 	CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error)
+	TruncateAllData(ctx context.Context) error
 }
 
 type SupportService interface {
@@ -123,4 +126,8 @@ func (s *service) ReqPickupDelivery(ctx context.Context, transactionID int) erro
 
 func (s *service) UpdateStock(ctx context.Context, input UpdateStockInput) error {
 	return nil
+}
+
+func (s *service) ClearDatabase(ctx context.Context) error {
+	return s.storage.TruncateAllData(ctx)
 }

@@ -264,3 +264,15 @@ func (s *storage) CreateTransaction(ctx context.Context, shoppingCart *entity.Sh
 		ID: transactionRow.ID,
 	}, nil
 }
+
+func (s *storage) TruncateAllData(ctx context.Context) error {
+	_, err := s.client.ExecContext(ctx, "TRUNCATE transactions")
+	if err != nil {
+		return fmt.Errorf("unable to truncate shopping cart / transaction table due: %w", err)
+	}
+	_, err = s.client.ExecContext(ctx, "TRUNCATE transaction_details")
+	if err != nil {
+		return fmt.Errorf("unable to truncate shopping cart / transaction details table due: %w", err)
+	}
+	return nil
+}
