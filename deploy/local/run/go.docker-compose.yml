@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  db:
+    image: bitnami/mysql:5.7
+    healthcheck:
+      test: out=$$(mysqladmin ping -h localhost -P 3306 -u root --password=$$MYSQL_ROOT_PASSWORD 2>&1); echo $$out | grep 'mysqld is alive' || { echo $$out; exit 1; }
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - "23306:3306"
+    volumes:
+      - ../../shared/db.sql:/docker-entrypoint-initdb.d/db.sql
+    environment:
+      - MYSQL_DATABASE=umkm
+      - MYSQL_ROOT_PASSWORD=test1234
+
+  rest_api:
+    image: cosmtrek/air
+    working_dir: /norma/penelitian-rpi
+    ports:
+      - 9900:8080
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ../../../go/build/package/rest-api/air.toml:/norma/penelitian-rpi/.air.toml
+      - ../../../go/tmp/air:/norma/penelitian-rpi/tmp/air
+      - ../../../go/go.mod:/norma/penelitian-rpi/go.mod
+      - ../../../go/go.sum:/norma/penelitian-rpi/go.sum
+      - ../../../go/cmd:/norma/penelitian-rpi/cmd
+      - ../../../go/internal:/norma/penelitian-rpi/internal
+    environment:
+      - DB_SQLDSN=root:test1234@tcp(db:3306)/umkm?timeout=5s
