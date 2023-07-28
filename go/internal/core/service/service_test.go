@@ -122,14 +122,14 @@ func TestAddToCart(mainT *testing.T) {
 			Name: "Successfully add goods to cart from non-empty cart",
 			Input: []service.AddToCartInput{
 				{
-					UserID:     100,
+					UserID:     200,
 					GoodsID:    2,
 					GoodsPrice: 2000,
 					Total:      1,
 				},
 				{
 					CartID:     1,
-					UserID:     100,
+					UserID:     200,
 					GoodsID:    3,
 					GoodsPrice: 1500,
 					Total:      4,
@@ -266,16 +266,19 @@ func (m *mockStorage) GetExistingShoppingCart(ctx context.Context, shoppingCartI
 	return &existCart, nil
 }
 
-func (m *mockStorage) AddGoodToCart(ctx context.Context, cart *entity.ShoppingCart) error {
+func (m *mockStorage) AddGoodToCart(ctx context.Context, cart *entity.ShoppingCart) (*entity.ShoppingCart, error) {
+	var cartOutput entity.ShoppingCart
 	if cart.ID > 0 {
 		existCart, ok := m.ShoppingCart[cart.ID]
 		if !ok {
-			return fmt.Errorf("unexpected error: no existing cart for ID %d", cart.ID)
+			return nil, fmt.Errorf("unexpected error: no existing cart for ID %d", cart.ID)
 		}
-		existCart.Details = append(existCart.Details, cart.Details...)
+		existCart.Details = cart.Details
 		existCart.TotalAmount = existCart.GetTotalAmount()
 
 		m.ShoppingCart[cart.ID] = existCart
+
+		cartOutput = m.ShoppingCart[cart.ID]
 	} else {
 		newCartID := len(m.ShoppingCart) + 1
 		m.ShoppingCart[int64(newCartID)] = entity.ShoppingCart{
@@ -284,8 +287,10 @@ func (m *mockStorage) AddGoodToCart(ctx context.Context, cart *entity.ShoppingCa
 			TotalAmount: cart.GetTotalAmount(),
 			Details:     cart.Details,
 		}
+
+		cartOutput = m.ShoppingCart[int64(newCartID)]
 	}
-	return nil
+	return &cartOutput, nil
 }
 
 func (m *mockStorage) CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error) {
@@ -295,6 +300,10 @@ func (m *mockStorage) CreateTransaction(ctx context.Context, shoppingCart *entit
 	return &entity.Transaction{
 		ID: time.Now().Unix(),
 	}, nil
+}
+
+func (m *mockStorage) TruncateAllData(ctx context.Context) error {
+	return nil
 }
 
 type mockSupportService struct{}

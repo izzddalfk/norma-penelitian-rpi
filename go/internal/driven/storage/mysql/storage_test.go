@@ -68,7 +68,7 @@ func TestGetExistingShoppingCart(mainT *testing.T) {
 			},
 		},
 	}
-	err = strg.AddGoodToCart(context.Background(), newShoppingCartInput)
+	_, err = strg.AddGoodToCart(context.Background(), newShoppingCartInput)
 	require.NoError(mainT, err)
 
 	// assert the existing cart
@@ -292,8 +292,9 @@ func TestAddGoodToCart(mainT *testing.T) {
 			}()
 
 			for _, input := range testCase.Input {
-				err = strg.AddGoodToCart(context.Background(), &input)
+				cartOutput, err := strg.AddGoodToCart(context.Background(), &input)
 				require.NoError(t, err)
+				require.NotNil(t, cartOutput)
 			}
 
 			for _, expectedCart := range testCase.ExpectedCarts {
@@ -337,8 +338,9 @@ func TestCreateTransaction(mainT *testing.T) {
 			},
 		},
 	}
-	err = strg.AddGoodToCart(context.Background(), newShoppingCartInput)
+	cartOutput, err := strg.AddGoodToCart(context.Background(), newShoppingCartInput)
 	require.NoError(mainT, err)
+	require.NotNil(mainT, cartOutput)
 
 	// create new transaction
 	newTrx, err := strg.CreateTransaction(context.Background(), &entity.ShoppingCart{ID: 1})
