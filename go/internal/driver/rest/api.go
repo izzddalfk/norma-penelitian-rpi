@@ -71,7 +71,7 @@ func (a *api) HandleShowListOfGoods(c *gin.Context) {
 	if err != nil {
 		c.JSON(
 			http.StatusInternalServerError,
-			NewInternalServerErrorResponse(err),
+			NewInternalServerErrorResponse(err.Error()),
 		)
 		return
 	}
