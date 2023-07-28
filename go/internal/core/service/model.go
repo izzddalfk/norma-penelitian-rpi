@@ -50,6 +50,8 @@ type AddToCartInput struct {
 }
 
 type AddToCartOutput struct {
+	CartID      int64
+	UserID      int
 	TotalGoods  int
 	TotalAmount float64
 }

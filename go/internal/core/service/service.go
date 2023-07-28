@@ -22,7 +22,7 @@ type Service interface {
 type Storage interface {
 	GetGoods(ctx context.Context, input GetGoodsInput) ([]entity.Goods, error)
 	GetExistingShoppingCart(ctx context.Context, shoppingCartID int64) (*entity.ShoppingCart, error)
-	AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) error
+	AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.ShoppingCart, error)
 	CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error)
 }
 
@@ -91,14 +91,16 @@ func (s *service) AddToCart(ctx context.Context, input AddToCartInput) (*AddToCa
 		shoppingCart = *newShoppingCart
 	}
 
-	err := s.storage.AddGoodToCart(ctx, &shoppingCart)
+	simpleCart, err := s.storage.AddGoodToCart(ctx, &shoppingCart)
 	if err != nil {
 		return nil, fmt.Errorf("unable to store shopping cart info to storage due: %w", err)
 	}
 
 	return &AddToCartOutput{
+		CartID:      simpleCart.ID,
+		UserID:      simpleCart.UserID,
 		TotalGoods:  shoppingCart.GetTotalGoods(),
-		TotalAmount: shoppingCart.GetTotalAmount(),
+		TotalAmount: simpleCart.TotalAmount,
 	}, nil
 }
 

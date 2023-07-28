@@ -89,15 +89,19 @@ func (s *storage) GetExistingShoppingCart(ctx context.Context, shoppingCartID in
 	return existingCart.ToShoppingCartEntity(), nil
 }
 
-func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) error {
+func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.ShoppingCart, error) {
 	dbTx, err := s.client.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("unable to begin transaction for add goods to cart query: %w", err)
+		return nil, fmt.Errorf("unable to begin transaction for add goods to cart query: %w", err)
 	}
 	// Defer the transaction’s rollback. If the transaction succeeds, it will be committed before the function exits,
 	// making the deferred rollback call a no-op.
 	// If the transaction fails it won’t be committed, meaning that the rollback will be called as the function exits.
 	defer dbTx.Rollback()
+
+	simpleCart := &entity.ShoppingCart{
+		UserID: shoppingCart.UserID,
+	}
 
 	switch {
 	case shoppingCart.ID <= 0:
@@ -111,7 +115,7 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 		// for this query, it should be execute immediately
 		_, err := s.client.ExecContext(ctx, queryTrx, shoppingCart.UserID, shoppingCart.GetTotalAmount(), 0)
 		if err != nil {
-			return fmt.Errorf("unable to create new shopping cart in database due: %w", err)
+			return nil, fmt.Errorf("unable to create new shopping cart in database due: %w", err)
 		}
 
 		// get new transaction / shopping cart ID
@@ -119,7 +123,7 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 		cartRow := dbTx.QueryRowContext(ctx, queryTrx, shoppingCart.UserID)
 		var newShoppingCartID int64
 		if err = cartRow.Scan(&newShoppingCartID); err != nil {
-			return fmt.Errorf("unable to get new shopping cart ID from database due: %w", err)
+			return nil, fmt.Errorf("unable to get new shopping cart ID from database due: %w", err)
 		}
 
 		// construct query for insert into transaction details table
@@ -128,7 +132,7 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 		// insert into transaction details table
 		_, err = dbTx.ExecContext(ctx, completeQueryTrxDetails)
 		if err != nil {
-			return fmt.Errorf("unable to insert goods into shopping cart details into database due: %w", err)
+			return nil, fmt.Errorf("unable to insert goods into shopping cart details into database due: %w", err)
 		}
 	default:
 		// construct query for insert into transaction details table
@@ -137,7 +141,7 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 		// insert into transaction details first
 		_, err = dbTx.ExecContext(ctx, completeQueryTrxDetails)
 		if err != nil {
-			return fmt.Errorf("unable to insert goods into shopping cart details into database due: %w", err)
+			return nil, fmt.Errorf("unable to insert goods into shopping cart details into database due: %w", err)
 		}
 
 		// update total_amount for existing cart in transactions table
@@ -158,10 +162,24 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 	// commit changes
 	err = dbTx.Commit()
 	if err != nil {
-		return fmt.Errorf("unable to commit add to cart operations in database due: %w", err)
+		return nil, fmt.Errorf("unable to commit add to cart operations in database due: %w", err)
 	}
 
-	return nil
+	// fill shopping cart output details
+	var latestCart []ShoppingCartRow
+	err = s.client.SelectContext(
+		ctx,
+		&latestCart,
+		"SELECT * FROM transactions WHERE id_user = ? AND status = 0 LIMIT 1",
+		shoppingCart.UserID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get latest cart details from database due: %w", err)
+	}
+	simpleCart.ID = latestCart[0].ID
+	simpleCart.TotalAmount = latestCart[0].TotalAmount
+
+	return simpleCart, nil
 }
 
 func (s storage) constructTransactionDetailsQuery(cartID int64, cartDetails []entity.ShoppingCartDetail) string {
