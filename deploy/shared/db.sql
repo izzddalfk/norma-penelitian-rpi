@@ -26,7 +26,8 @@ CREATE TABLE `transaction_details` (
 CREATE TABLE `transactions` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,
     `id_user` int(11) DEFAULT NULL,
-    `total_amount` double DEFAULT NULL,
+    `total_amount` double NOT NULL,
+    `payment_amount` double DEFAULT NULL,
     `status` tinyint(4) DEFAULT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
