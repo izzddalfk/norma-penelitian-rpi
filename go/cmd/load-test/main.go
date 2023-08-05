@@ -7,13 +7,18 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
 	vegeta "github.com/tsenart/vegeta/v12/lib"
 )
 
-const serverAddr = "http://192.168.1.8:9900"
+const (
+	addToCartFreqPerSecond   = 30
+	listOfGoodsFreqPerSecond = 100
+	serverAddr               = "http://192.168.1.8:9900"
+)
 
 var goodsList = map[int]float64{
 	1: 3000,
@@ -26,7 +31,7 @@ var goodsList = map[int]float64{
 }
 
 func main() {
-	duration := 30 * time.Second
+	duration := 5 * time.Second
 
 	// add to cart endpoints 50r/s
 	atcTargeter := newAddToCartTargeter()
@@ -41,7 +46,7 @@ func main() {
 		defer wg.Done()
 
 		rate := vegeta.Rate{
-			Freq: 50,
+			Freq: addToCartFreqPerSecond,
 			Per:  time.Second,
 		}
 
@@ -65,7 +70,7 @@ func main() {
 		defer wg.Done()
 
 		rate := vegeta.Rate{
-			Freq: 100,
+			Freq: listOfGoodsFreqPerSecond,
 			Per:  time.Second,
 		}
 
@@ -79,6 +84,17 @@ func main() {
 	}()
 
 	wg.Wait()
+
+	atcMetrics := metrics["atc"]
+	r := vegeta.NewTextReporter(&atcMetrics)
+
+	fileout, err := os.Create("report.txt")
+	if err != nil {
+		log.Fatalf("unable to create report file due: %v", err)
+	}
+	defer fileout.Close()
+
+	r.Report(fileout)
 
 	fmt.Printf("%+v \n", metrics)
 }
@@ -167,29 +183,6 @@ func (t *addToCartTargeter) newTargeter() vegeta.Targeter {
 
 		return nil
 	}
-}
-
-type respBodyAddToCart struct {
-	Code   int    `json:"code"`
-	Status string `json:"status"`
-	Data   struct {
-		CartID      int     `json:"cart_id"`
-		TotalAmount float64 `json:"total_amount"`
-	} `json:"data,omitempty"`
-	Errors interface{} `json:"errors,omitempty"`
-}
-
-type addToCartReqBody struct {
-	CartID     int     `json:"cart_id,omitempty"`
-	UserID     int     `json:"user_id"`
-	GoodsID    int     `json:"goods_id"`
-	GoodsPrice float64 `json:"goods_price"`
-	TotalGoods int     `json:"total_goods"`
-}
-
-type payReqBody struct {
-	CartID      int     `json:"cart_id"`
-	TotalAmount float64 `json:"total_amount"`
 }
 
 func clearDBReq() {
