@@ -293,8 +293,8 @@ func (m *mockStorage) AddGoodToCart(ctx context.Context, cart *entity.ShoppingCa
 	return &cartOutput, nil
 }
 
-func (m *mockStorage) CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error) {
-	if shoppingCart == nil {
+func (m *mockStorage) CreateTransaction(ctx context.Context, input service.CreateTransactionInput) (*entity.Transaction, error) {
+	if input.CartID <= 0 {
 		return nil, fmt.Errorf("no shopping cart")
 	}
 	return &entity.Transaction{

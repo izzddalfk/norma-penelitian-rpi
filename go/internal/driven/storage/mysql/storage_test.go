@@ -91,7 +91,7 @@ func TestGetExistingShoppingCart(mainT *testing.T) {
 			},
 		},
 	}
-	existingCart, err := strg.GetExistingShoppingCart(context.Background(), 1)
+	existingCart, err := strg.GetExistingShoppingCart(context.Background(), expectedCart.ID)
 	require.NoError(mainT, err)
 	require.Equal(mainT, expectedCart, existingCart)
 }
@@ -343,7 +343,10 @@ func TestCreateTransaction(mainT *testing.T) {
 	require.NotNil(mainT, cartOutput)
 
 	// create new transaction
-	newTrx, err := strg.CreateTransaction(context.Background(), &entity.ShoppingCart{ID: 1})
+	newTrx, err := strg.CreateTransaction(context.Background(), service.CreateTransactionInput{
+		CartID:        1,
+		PaymentAmount: cartOutput.TotalAmount,
+	})
 	require.NoError(mainT, err)
 	require.Equal(mainT, int64(1), newTrx.ID)
 }

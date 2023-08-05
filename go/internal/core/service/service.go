@@ -25,7 +25,7 @@ type Storage interface {
 	GetGoods(ctx context.Context, input GetGoodsInput) ([]entity.Goods, error)
 	GetExistingShoppingCart(ctx context.Context, shoppingCartID int64) (*entity.ShoppingCart, error)
 	AddGoodToCart(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.ShoppingCart, error)
-	CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error)
+	CreateTransaction(ctx context.Context, input CreateTransactionInput) (*entity.Transaction, error)
 	TruncateAllData(ctx context.Context) error
 }
 
@@ -108,12 +108,13 @@ func (s *service) AddToCart(ctx context.Context, input AddToCartInput) (*AddToCa
 }
 
 func (s *service) Pay(ctx context.Context, input PayInput) (*entity.Transaction, error) {
-	existShoppingCart, err := s.storage.GetExistingShoppingCart(ctx, input.CartID)
+	currTrx, err := s.storage.CreateTransaction(ctx, CreateTransactionInput(input))
 	if err != nil {
-		return nil, fmt.Errorf("unable to get shopping cart information due: %w", err)
+		return nil, fmt.Errorf("unable to pay the goods in shopping cart due: %w", err)
 	}
+	currTrx.SetPaymentAndReturnAmount(input.PaymentAmount)
 
-	return s.storage.CreateTransaction(ctx, existShoppingCart)
+	return currTrx, nil
 }
 
 func (s *service) ReqCalculateDeliveryPrice(ctx context.Context, input ReqCalculateDeliveryPriceInput) error {

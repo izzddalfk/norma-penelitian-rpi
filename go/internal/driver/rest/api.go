@@ -129,8 +129,8 @@ func (a *api) HandleAddGoodsToCart(c *gin.Context) {
 
 func (a *api) HandlePay(c *gin.Context) {
 	var reqBody struct {
-		CartID      int64   `json:"cart_id" binding:"required"`
-		TotalAmount float64 `json:"total_amount" binding:"required"`
+		CartID        int64   `json:"cart_id" binding:"required"`
+		PaymentAmount float64 `json:"payment_amount" binding:"required"`
 	}
 
 	err := c.ShouldBindJSON(&reqBody)
@@ -143,7 +143,8 @@ func (a *api) HandlePay(c *gin.Context) {
 	}
 
 	trx, err := a.servce.Pay(c.Request.Context(), service.PayInput{
-		CartID: reqBody.CartID,
+		CartID:        reqBody.CartID,
+		PaymentAmount: reqBody.PaymentAmount,
 	})
 	if err != nil {
 		c.JSON(
@@ -154,9 +155,15 @@ func (a *api) HandlePay(c *gin.Context) {
 	}
 
 	var respBody struct {
-		TransactionID int64 `json:"transaction_id"`
+		TransactionID int64   `json:"transaction_id"`
+		TotalAmount   float64 `json:"total_amount"`
+		PaymentAmount float64 `json:"payment_amount"`
+		ReturnAmount  float64 `json:"return_amount"`
 	}
 	respBody.TransactionID = trx.ID
+	respBody.TotalAmount = trx.TotalAmount
+	respBody.PaymentAmount = trx.PaymentAmount
+	respBody.ReturnAmount = trx.ReturnAmount
 
 	c.JSON(http.StatusOK, NewSuccessResponse(respBody))
 }

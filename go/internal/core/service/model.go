@@ -57,7 +57,8 @@ type AddToCartOutput struct {
 }
 
 type PayInput struct {
-	CartID int64
+	CartID        int64
+	PaymentAmount float64
 }
 
 type ReqCalculateDeliveryPriceInput struct {
@@ -84,6 +85,6 @@ type GetGoodsInput struct {
 }
 
 type CreateTransactionInput struct {
-	CartID      int
-	TotalAmount float64
+	CartID        int64
+	PaymentAmount float64
 }

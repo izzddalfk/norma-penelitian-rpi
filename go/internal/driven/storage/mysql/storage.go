@@ -3,6 +3,7 @@ package storagemysql
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/izzdalfk/norma-research-pi-server-umkm-app/internal/core/entity"
@@ -85,6 +86,7 @@ func (s *storage) GetExistingShoppingCart(ctx context.Context, shoppingCartID in
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute select query for get existing cart due: %w", err)
 	}
+	log.Printf("[DEBUG] EXISTING CART: %+v", existingCart)
 
 	return existingCart.ToShoppingCartEntity(), nil
 }
@@ -170,7 +172,7 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 	err = s.client.SelectContext(
 		ctx,
 		&latestCart,
-		"SELECT * FROM transactions WHERE id_user = ? AND status = 0 LIMIT 1",
+		"SELECT id, id_user, total_amount, status FROM transactions WHERE id_user = ? AND status = 0 LIMIT 1",
 		shoppingCart.UserID,
 	)
 	if err != nil {
@@ -178,6 +180,8 @@ func (s *storage) AddGoodToCart(ctx context.Context, shoppingCart *entity.Shoppi
 	}
 	simpleCart.ID = latestCart[0].ID
 	simpleCart.TotalAmount = latestCart[0].TotalAmount
+
+	log.Printf("[DEBUG] SIMPLE CART: %+v", simpleCart)
 
 	return simpleCart, nil
 }
@@ -211,7 +215,7 @@ func (s storage) constructTransactionDetailsQuery(cartID int64, cartDetails []en
 }
 
 // CreateTransaction simply update transaction status from `0` to `1`
-func (s *storage) CreateTransaction(ctx context.Context, shoppingCart *entity.ShoppingCart) (*entity.Transaction, error) {
+func (s *storage) CreateTransaction(ctx context.Context, input service.CreateTransactionInput) (*entity.Transaction, error) {
 	dbTx, err := s.client.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to begin transaction for add goods to cart query: %w", err)
@@ -222,29 +226,38 @@ func (s *storage) CreateTransaction(ctx context.Context, shoppingCart *entity.Sh
 	defer dbTx.Rollback()
 
 	// update transaction status
-	queryTrx := `UPDATE transactions SET status = 1 WHERE id = ?`
-	_, err = dbTx.ExecContext(ctx, queryTrx, shoppingCart.ID)
+	queryTrx := `
+		UPDATE 
+			transactions 
+		SET 
+			status = 1,
+			payment_amount = ?
+		WHERE id = ?`
+	_, err = dbTx.ExecContext(ctx, queryTrx, input.PaymentAmount, input.CartID)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create new transactions into datbaase due: %w", err)
 	}
 
 	// get the transaction record to returned it
 	var transactionRow struct {
-		ID     int64 `db:"id"`
-		Status int   `db:"status"`
+		ID          int64   `db:"id"`
+		TotalAmount float64 `db:"total_amount"`
+		Status      int     `db:"status"`
 	}
 	queryTrx = `
 		SELECT
-			id, 
+			id,
+			total_amount,
 			status 
 		FROM transactions
 		WHERE id = ? AND status = 1
 		LIMIT 1
 	`
 
-	trxRow := dbTx.QueryRowContext(ctx, queryTrx, shoppingCart.ID)
+	trxRow := dbTx.QueryRowContext(ctx, queryTrx, input.CartID)
 	err = trxRow.Scan(
 		&transactionRow.ID,
+		&transactionRow.TotalAmount,
 		&transactionRow.Status,
 	)
 	if err != nil {
@@ -261,7 +274,8 @@ func (s *storage) CreateTransaction(ctx context.Context, shoppingCart *entity.Sh
 	}
 
 	return &entity.Transaction{
-		ID: transactionRow.ID,
+		ID:          transactionRow.ID,
+		TotalAmount: transactionRow.TotalAmount,
 	}, nil
 }
 

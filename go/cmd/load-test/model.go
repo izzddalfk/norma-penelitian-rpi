@@ -19,6 +19,6 @@ type addToCartReqBody struct {
 }
 
 type payReqBody struct {
-	CartID      int     `json:"cart_id"`
-	TotalAmount float64 `json:"total_amount"`
+	CartID        int     `json:"cart_id"`
+	PaymentAmount float64 `json:"payment_amount"`
 }
