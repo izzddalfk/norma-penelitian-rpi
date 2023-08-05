@@ -20,6 +20,7 @@ const (
 	serverAddr               = "http://192.168.1.8:9900"
 )
 
+// goods ID: goods Price
 var goodsList = map[int]float64{
 	1: 3000,
 	2: 1500,
