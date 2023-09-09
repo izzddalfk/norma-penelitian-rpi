@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: umkm-app-api
+  labels:
+    app.kubernetes.io/name: umkm-app-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: umkm-app-api
+      tier: backend
+  template:
+    metadata:
+      name: umkm-app-api
+      labels:
+        app.kubernetes.io/name: umkm-app-api
+        tier: backend
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: node.kubernetes.io/microk8s-worker
+                operator: In
+                values:
+                - microk8s-worker
+      containers:
+        - name: umkm-app-api
+          image: mzk17/norma-penelitian-rpi:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_SQLDSN
+              value: root:test1234@tcp(192.168.1.201:23306)/umkm?timeout=5s
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: umkm-app-api
+  labels:
+    app.kubernetes.io/name: umkm-app-api
+    tier: backend
+spec:
+  selector:
+    app.kubernetes.io/name: umkm-app-api
+    tier: backend
+  ports:
+  - name: http
+    port: 9900
+    protocol: TCP
+    targetPort: 8080
+
+---
+
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: mysqldb
+  labels:
+    external-db: Mysql
+subsets:
+  - addresses:
+    - ip: 192.168.1.201
+    ports:
+    - protocol: TCP
+      port: 23306
