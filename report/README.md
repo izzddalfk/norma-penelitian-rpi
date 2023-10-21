@@ -28,6 +28,10 @@ Koneksi menggunakan WiFi
 
 Komputer yang dipakai untuk mengirimkan request benchmark, MacBook Pro 2021 M1 Pro.
 
+## Go version: Single Server Raspberry Pi
+
+TODO
+
 ## Go version: Single Server PC
 
 Hasil benchmark bisa dibaca [disini](./single_server_pc_go.json).
