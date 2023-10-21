@@ -1,7 +1,9 @@
 # Report Benchmark
 
-Durasi pengujian: 5 menit
+Durasi pengujian: 5 menit.
+
 Komputer yang dipakai untuk mengirimkan request benchmark: MacBook Pro 2021 M1 Pro.
+
 Koneksi ke server menggunakan WiFi.
 
 ## Go version: Clustering
