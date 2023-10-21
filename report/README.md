@@ -1,6 +1,8 @@
 # Report Benchmark
 
 Durasi pengujian: 5 menit
+Komputer yang dipakai untuk mengirimkan request benchmark: MacBook Pro 2021 M1 Pro.
+Koneksi ke server menggunakan WiFi.
 
 ## Go version: Clustering
 
@@ -24,10 +26,6 @@ Spesifikasi Cluster:
   - sdCard: 64GB Class 10
   - Ubuntu Server 22.04.3
 
-Koneksi menggunakan WiFi
-
-Komputer yang dipakai untuk mengirimkan request benchmark, MacBook Pro 2021 M1 Pro.
-
 ## Go version: Single Server Raspberry Pi
 
 TODO
@@ -42,7 +40,3 @@ Spesifikasi PC:
 - RAM 64GB
 - Storage SSD 256GB
 - Ubuntu Server 22.04.3
-
-Koneksi menggunakan WiFi
-
-Komputer yang dipakai untuk mengirimkan request benchmark, MacBook Pro 2021 M1 Pro.
