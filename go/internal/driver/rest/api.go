@@ -6,11 +6,13 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/izzdalfk/norma-research-pi-server-umkm-app/internal/core/service"
 	"gopkg.in/validator.v2"
 )
 
 type api struct {
+	id     string
 	servce service.Service
 }
 
@@ -22,8 +24,10 @@ func NewAPI(config APIConfig) (*api, error) {
 	if err := validator.Validate(config); err != nil {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
+	svcID := uuid.NewString()
 
 	return &api{
+		id:     svcID,
 		servce: config.Service,
 	}, nil
 }
@@ -78,7 +82,7 @@ func (a *api) HandleShowListOfGoods(c *gin.Context) {
 
 	c.JSON(
 		http.StatusOK,
-		NewSuccessResponse(listOfGoods),
+		NewSuccessResponse(listOfGoods, a.id),
 	)
 }
 
@@ -124,7 +128,7 @@ func (a *api) HandleAddGoodsToCart(c *gin.Context) {
 	respBody.TotalGoods = output.TotalGoods
 	respBody.TotalAmount = output.TotalAmount
 
-	c.JSON(http.StatusOK, NewSuccessResponse(respBody))
+	c.JSON(http.StatusOK, NewSuccessResponse(respBody, a.id))
 }
 
 func (a *api) HandlePay(c *gin.Context) {
@@ -165,7 +169,7 @@ func (a *api) HandlePay(c *gin.Context) {
 	respBody.PaymentAmount = trx.PaymentAmount
 	respBody.ReturnAmount = trx.ReturnAmount
 
-	c.JSON(http.StatusOK, NewSuccessResponse(respBody))
+	c.JSON(http.StatusOK, NewSuccessResponse(respBody, a.id))
 }
 
 func (a *api) HandleClearDB(c *gin.Context) {
@@ -177,5 +181,5 @@ func (a *api) HandleClearDB(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse("Clear database success!"))
+	c.JSON(http.StatusOK, NewSuccessResponse("Clear database success!", a.id))
 }

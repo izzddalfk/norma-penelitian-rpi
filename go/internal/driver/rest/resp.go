@@ -3,17 +3,19 @@ package rest
 import "net/http"
 
 type Response struct {
-	Code   int         `json:"code"`
-	Status string      `json:"status"`
-	Data   interface{} `json:"data,omitempty"`
-	Errors interface{} `json:"errors,omitempty"`
+	ServiceID string      `json:"svc_id"`
+	Code      int         `json:"code"`
+	Status    string      `json:"status"`
+	Data      interface{} `json:"data,omitempty"`
+	Errors    interface{} `json:"errors,omitempty"`
 }
 
-func NewSuccessResponse(data interface{}) Response {
+func NewSuccessResponse(data interface{}, svcID string) Response {
 	return Response{
-		Code:   http.StatusOK,
-		Status: "OK",
-		Data:   data,
+		ServiceID: svcID,
+		Code:      http.StatusOK,
+		Status:    "OK",
+		Data:      data,
 	}
 }
 

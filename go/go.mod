@@ -5,10 +5,12 @@ go 1.19
 require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/google/uuid v1.5.0
 	github.com/gosidekick/goconfig v1.3.1
 	github.com/jaswdr/faker v1.18.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/stretchr/testify v1.8.4
+	github.com/tsenart/vegeta/v12 v12.11.0
 	gopkg.in/validator.v2 v2.0.1
 )
 
@@ -36,7 +38,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.9 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417 // indirect
-	github.com/tsenart/vegeta/v12 v12.11.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	golang.org/x/arch v0.4.0 // indirect
